@@ -6,9 +6,7 @@
 <p>
     @using (Html.BeginForm("LoadFile", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
     {
-        <input type="file" name="fileUpload[0]" /><br />
-        <input type="file" name="fileUpload[1]" /><br />
-        <input type="file" name="fileUpload[2]" /><br />
+        <input type="file"  name="fileUpload" multiple="true" /><br />
         <input type="submit" name="Submit" id="SubmitMultiply" value="Upload" />
     }
 </p>
