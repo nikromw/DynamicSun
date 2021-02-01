@@ -65,7 +65,24 @@ namespace DynamicSun.Controllers
                 {
                     if (sheet.GetRow(row) != null)
                     {
-                        var ad = sheet.GetRow(row);
+                        Weather weather = new Weather();
+                        var RowElements = sheet.GetRow(row).Cells;
+                        weather.Date = new DateTime(Convert.ToInt32(RowElements[0].ToString().Split('.')[2]),
+                                                    Convert.ToInt32(RowElements[0].ToString().Split('.')[1]),
+                                                    Convert.ToInt32(RowElements[0].ToString().Split('.')[0]),
+                                                    Convert.ToInt32(RowElements[1].ToString().Split(':')[0]),
+                                                    Convert.ToInt32(RowElements[1].ToString().Split(':')[1]),
+                                                    0);
+                        weather.Temp = Convert.ToDouble(RowElements[2].ToString());
+                        weather.Wet = Convert.ToDouble(RowElements[3].ToString());
+                        weather.DewPoint = Convert.ToDouble(RowElements[4].ToString());
+                        weather.Pressure = Convert.ToInt32(RowElements[5].ToString());
+                        weather.WindDirect = RowElements[6].ToString();
+                        weather.WindSpeed = Convert.ToDouble(RowElements[7].ToString());
+                        weather.CloudCover = Convert.ToDouble(RowElements[8].ToString());
+                        weather.LowLimitCloud = Convert.ToDouble(RowElements[9].ToString());
+                        weather.HorizontalVisibility = Convert.ToDouble(RowElements[10].NumericCellValue == null ? " ": RowElements[10].StringCellValue);
+                        weather.WeatherEffect = RowElements[11].ToString();
                     }
                 }
             }

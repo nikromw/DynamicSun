@@ -13,7 +13,6 @@ namespace DynamicSun
     {
         protected void Application_Start()
         {
-            WeatherContext db = new WeatherContext();
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
