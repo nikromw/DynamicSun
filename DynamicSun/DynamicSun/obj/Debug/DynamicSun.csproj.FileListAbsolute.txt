@@ -81,3 +81,15 @@ C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\obj\Debug\Dynami
 C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\obj\Debug\DynamicSun.csproj.CopyComplete
 C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\obj\Debug\DynamicSun.dll
 C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\obj\Debug\DynamicSun.pdb
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\BouncyCastle.Crypto.dll
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\ICSharpCode.SharpZipLib.dll
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.dll
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.OOXML.dll
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.OpenXml4Net.dll
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.OpenXmlFormats.dll
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\BouncyCastle.Crypto.xml
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\ICSharpCode.SharpZipLib.pdb
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\ICSharpCode.SharpZipLib.xml
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.xml
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.OOXML.xml
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.OpenXml4Net.xml
