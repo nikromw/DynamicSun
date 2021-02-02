@@ -93,3 +93,5 @@ C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\ICSharpCode.
 C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.xml
 C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.OOXML.xml
 C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\NPOI.OpenXml4Net.xml
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\PagedList.dll
+C:\Users\Salvador\source\repos\DynamicSun\DynamicSun\DynamicSun\bin\PagedList.xml

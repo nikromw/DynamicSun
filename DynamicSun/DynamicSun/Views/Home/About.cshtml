@@ -1,5 +1,42 @@
-﻿@{
+﻿
+@{
     ViewBag.Title = "About";
 }
-<h2>@ViewBag.Title.</h2>
-<h3>@ViewBag.Message</h3>
+@model IndexViewModel
+<table class="table">
+    <tr>
+        <td>Дата</td>
+        <td>Время</td>
+        <td>T</td>
+        <td>Влажность</td>
+        <td>Точка росы</td>
+        <td>Давление</td>
+        <td>Направление ветра</td>
+        <td>Скорость ветра</td>
+        <td>Облачность</td>
+        <td>Нижняя граница облачность</td>
+        <td>Горизонтальная видимость</td>
+        <td>Природные явления</td>
+    </tr>
+    @foreach (var item in Model.Weathers)
+    {
+        <tr>
+            <td>@item.Date</td>
+            <td>@item.Time</td>
+            <td>@item.Temp</td>
+            <td>@item.Wet</td>
+            <td>@item.DewPoint</td>
+            <td>@item.Pressure</td>
+            <td>@item.WindDirect</td>
+            <td>@item.WindSpeed</td>
+            <td>@item.CloudCover</td>
+            <td>@item.LowLimitCloud</td>
+            <td>@item.HorizontalVisibility</td>
+            <td>@item.WeatherEffect</td>
+        </tr>
+    }
+</table>
+<br />
+<div class="btn-group">
+    @Html.PageLinks(Model.PageInfo, x => Url.Action("About", new { page = x }))
+</div>

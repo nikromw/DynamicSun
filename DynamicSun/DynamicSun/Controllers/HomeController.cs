@@ -1,6 +1,7 @@
 ﻿using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using PagedList;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.UI;
 
 namespace DynamicSun.Controllers
 {
@@ -15,19 +17,23 @@ namespace DynamicSun.Controllers
     public class HomeController : Controller
     {
         static WeatherContext db = new WeatherContext();
-        List<Weather> weatherFromDb = new List<Weather>();
+        static List<Weather> weatherFromDb = new List<Weather>();
         static Dictionary<string, bool> archives = new Dictionary<string, bool>();
         public ActionResult Index(string archive)
         {
-            LoadArchiveFromDb(archive);
+            ViewBag.Amount = 10;
+            LoadArchiveFromDb(archive); 
             LoadArchives();
             return View();
         }
 
-        public ActionResult About()
+        public ActionResult About(int page=1)
         {
-            ViewBag.Message = "Your application description page.";
-            return View();
+            int pageSize = 15; 
+            IEnumerable<Weather> WeatherPages = weatherFromDb.Skip((page - 1) * pageSize).Take(pageSize);
+            PageInfo pageInfo = new PageInfo { PageNumber = page, PageSize = pageSize, TotalItems = weatherFromDb.Count };
+            IndexViewModel ivm = new IndexViewModel { PageInfo = pageInfo, Weathers = WeatherPages };
+            return View(ivm);
         }
 
 
