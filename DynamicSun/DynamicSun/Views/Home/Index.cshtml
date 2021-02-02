@@ -7,14 +7,17 @@
         <div>
             <table width="100%" border="1">
                 <caption>Loaded archives</caption>
-                @foreach (var archive in ViewBag.Archives)
-                {
+                <form  action="/Home/Index">
+                    @foreach (var archive in ViewBag.Archives)
+                    {
                     <tr>
-                        <th>@archive</th>
-                        <th><a href="/Home/LoadFile">Load</a></th>
+                        <th><input type="text" name="archive" value="@archive.Key" /></th>
+                        <th> <input type="submit" value="Отправить" /> </th>
                     </tr>
-                }
-            </table>
+                    }
+                </form>
+
+</table>
         </div>
     </div>
 </div>

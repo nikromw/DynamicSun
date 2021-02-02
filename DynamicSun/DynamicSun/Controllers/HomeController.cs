@@ -14,9 +14,12 @@ namespace DynamicSun.Controllers
 
     public class HomeController : Controller
     {
-       static WeatherContext db = new WeatherContext();
-        public ActionResult Index()
+        static WeatherContext db = new WeatherContext();
+        List<Weather> weatherFromDb = new List<Weather>();
+        static Dictionary<string, bool> archives = new Dictionary<string, bool>();
+        public ActionResult Index(string archive)
         {
+            LoadArchiveFromDb(archive);
             LoadArchives();
             return View();
         }
@@ -24,7 +27,6 @@ namespace DynamicSun.Controllers
         public ActionResult About()
         {
             ViewBag.Message = "Your application description page.";
-
             return View();
         }
 
@@ -52,10 +54,12 @@ namespace DynamicSun.Controllers
         {
             string path = AppDomain.CurrentDomain.BaseDirectory;
             string[] files = Directory.GetFiles(path + "\\App_Data\\");
-            List<string> archives = new List<string>();
             foreach (var file in files)
             {
-                archives.Add(file.Split('\\').Last());
+                if (!archives.ContainsKey(file.Split('\\').Last()))
+                {
+                    archives.Add(file.Split('\\').Last(), false);
+                }
             }
             ViewBag.Archives = archives;
         }
@@ -107,6 +111,15 @@ namespace DynamicSun.Controllers
             }
             catch (Exception e)
             { }
+        }
+        public void LoadArchiveFromDb(string archive)
+        {
+            if (archive != null && archives[archive] == false )
+            {
+                archives[archive] = true;
+                weatherFromDb.AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
+                ViewBag.weatherFromdb = weatherFromDb;
+            }
         }
     }
 }
