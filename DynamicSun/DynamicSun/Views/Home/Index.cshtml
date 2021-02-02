@@ -7,13 +7,13 @@
         <div>
             <table width="100%" border="1">
                 <caption>Loaded archives</caption>
-                <tr>
-                    @foreach (var archive in ViewBag.Archives)
-                    {
-                        <th>@archive.ArchiveName</th>
+                @foreach (var archive in ViewBag.Archives)
+                {
+                    <tr>
+                        <th>@archive</th>
                         <th><a href="/Home/LoadFile">Load</a></th>
-                    }
-                </tr>
+                    </tr>
+                }
             </table>
         </div>
     </div>

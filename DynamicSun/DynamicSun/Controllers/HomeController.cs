@@ -17,7 +17,7 @@ namespace DynamicSun.Controllers
        static WeatherContext db = new WeatherContext();
         public ActionResult Index()
         {
-            ViewBag.Archives = db.Archives;
+            LoadArchives();
             return View();
         }
 
@@ -42,10 +42,22 @@ namespace DynamicSun.Controllers
                     if (filename != null) file.SaveAs(Path.Combine(path, filename));
                     Thread ReadFile = new Thread(new ParameterizedThreadStart(LoadFileInBd));
                     ReadFile.Start(path + filename);
-
+                    LoadArchives();
                 }
             }
             return View();
+        }
+
+        public void LoadArchives()
+        {
+            string path = AppDomain.CurrentDomain.BaseDirectory;
+            string[] files = Directory.GetFiles(path + "\\App_Data\\");
+            List<string> archives = new List<string>();
+            foreach (var file in files)
+            {
+                archives.Add(file.Split('\\').Last());
+            }
+            ViewBag.Archives = archives;
         }
 
         public static void LoadFileInBd(object obj)

@@ -13,7 +13,6 @@ namespace DynamicSun
             Database.CreateIfNotExists(); 
         }
         public DbSet<Weather> Weathers { get; set; }
-        public DbSet<Archive> Archives { get; set; }
 
     }
 }
