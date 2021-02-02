@@ -3,6 +3,16 @@
     ViewBag.Title = "About";
 }
 @model IndexViewModel
+    <dib>
+        <form action="~/Home/About">
+            <label>Sort by year</label<br>
+        <input type="text" name="YearSort" />
+            <label>Sort by month</label>
+        <input type="text" name="MonthSort" />
+            <input type="submit" value="Sort">
+        </form>
+    </dib>
+
 <table class="table">
     <tr>
         <td>Дата</td>
