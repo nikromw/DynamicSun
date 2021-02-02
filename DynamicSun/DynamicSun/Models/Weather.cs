@@ -6,16 +6,17 @@ namespace DynamicSun
     {
         public int Id { get; set; }
         public string ArchiveName { get; set; }
-        public DateTime Date { get; set; }
-        public double Temp { get; set; }
-        public double Wet { get; set; }
-        public double DewPoint { get; set; }
-        public int Pressure { get; set; }
+        public string Date { get; set; }
+        public string Time { get; set; }
+        public string Temp { get; set; }
+        public string Wet { get; set; }
+        public string DewPoint { get; set; }
+        public string Pressure { get; set; }
         public string WindDirect { get; set; }
-        public double? WindSpeed { get; set; }
-        public double? CloudCover { get; set; }
-        public double LowLimitCloud { get; set; }
-        public double? HorizontalVisibility { get; set; }
+        public string WindSpeed { get; set; }
+        public string CloudCover { get; set; }
+        public string LowLimitCloud { get; set; }
+        public string HorizontalVisibility { get; set; }
         public string WeatherEffect { get; set; }
     }
 

@@ -14,7 +14,7 @@ namespace DynamicSun.Controllers
 
     public class HomeController : Controller
     {
-        WeatherContext db = new WeatherContext();
+       static WeatherContext db = new WeatherContext();
         public ActionResult Index()
         {
             ViewBag.Archives = db.Archives;
@@ -52,40 +52,49 @@ namespace DynamicSun.Controllers
         {
             string path = (string)obj;
             XSSFWorkbook hssfwb;
-            using (FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read))
+            try
             {
-                hssfwb = new XSSFWorkbook(file);
-
-            }
-            var a = hssfwb.NumberOfSheets;
-            for (int i=0; i<=a; i++)
-            {
-                ISheet sheet = hssfwb.GetSheetAt(i);
-                for (int row = 5; row <= sheet.LastRowNum; row++)
+                using (FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read))
                 {
-                    if (sheet.GetRow(row) != null)
+                    hssfwb = new XSSFWorkbook(file);
+
+                }
+                var a = hssfwb.NumberOfSheets;
+                for (int i = 0; i < a; i++)
+                {
+                    ISheet sheet = hssfwb.GetSheetAt(i);
+                    for (int row = 5; row <= sheet.LastRowNum; row++)
                     {
-                        Weather weather = new Weather();
-                        var RowElements = sheet.GetRow(row).Cells;
-                        weather.Date = new DateTime(Convert.ToInt32(RowElements[0].ToString().Split('.')[2]),
-                                                    Convert.ToInt32(RowElements[0].ToString().Split('.')[1]),
-                                                    Convert.ToInt32(RowElements[0].ToString().Split('.')[0]),
-                                                    Convert.ToInt32(RowElements[1].ToString().Split(':')[0]),
-                                                    Convert.ToInt32(RowElements[1].ToString().Split(':')[1]),
-                                                    0);
-                        weather.Temp = Convert.ToDouble(RowElements[2].ToString());
-                        weather.Wet = Convert.ToDouble(RowElements[3].ToString());
-                        weather.DewPoint = Convert.ToDouble(RowElements[4].ToString());
-                        weather.Pressure = Convert.ToInt32(RowElements[5].ToString());
-                        weather.WindDirect = RowElements[6].ToString();
-                        weather.WindSpeed = Convert.ToDouble(RowElements[7].ToString());
-                        weather.CloudCover = Convert.ToDouble(RowElements[8].ToString());
-                        weather.LowLimitCloud = Convert.ToDouble(RowElements[9].ToString());
-                        weather.HorizontalVisibility = Convert.ToDouble(RowElements[10].NumericCellValue == null ? " ": RowElements[10].StringCellValue);
-                        weather.WeatherEffect = RowElements[11].ToString();
+                        if (sheet.GetRow(row) != null)
+                        {
+                            try
+                            {
+                                Weather weather = new Weather();
+                                var RowElements = sheet.GetRow(row).Cells;
+                                weather.Date = RowElements[0].ToString();
+                                weather.Time = RowElements[1].ToString();
+                                weather.Temp = RowElements[2].ToString();
+                                weather.Wet = RowElements[3].ToString();
+                                weather.DewPoint = RowElements[4].ToString();
+                                weather.Pressure = RowElements[5].ToString();
+                                weather.WindDirect = RowElements[6].ToString();
+                                weather.WindSpeed = RowElements[7].ToString();
+                                weather.CloudCover = RowElements[8].ToString();
+                                weather.LowLimitCloud = RowElements[9].ToString();
+                                weather.ArchiveName = path.Split('\\').Last();
+                                weather.HorizontalVisibility = RowElements[10].ToString();
+                                weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].ToString();
+                                db.Weathers.Add(weather);
+                            }
+                            catch (Exception e)
+                            { }
+                        }
                     }
                 }
+                db.SaveChanges();
             }
+            catch (Exception e)
+            { }
         }
     }
 }
