@@ -4,12 +4,12 @@
 }
 @model IndexViewModel
     <dib>
-        <form action="~/Home/About">
-            <label>Sort by year</label<br>
-        <input type="text" name="YearSort" />
-            <label>Sort by month</label>
-        <input type="text" name="MonthSort" />
-            <input type="submit" value="Sort">
+        <form action="~/Home/ViewWeather">
+            <label>Sort by year</label><br>
+            <input type="text" name="YearSort" />
+            <label>Sort by month</label><br>
+            <input type="text" name="MonthSort" />
+            <input type="submit" value="Sort"><br>
         </form>
     </dib>
 
@@ -48,5 +48,5 @@
 </table>
 <br />
 <div class="btn-group">
-    @Html.PageLinks(Model.PageInfo, x => Url.Action("About", new { page = x }))
+    @Html.PageLinks(Model.PageInfo, x => Url.Action("ViewWeather", new { page = x }))
 </div>

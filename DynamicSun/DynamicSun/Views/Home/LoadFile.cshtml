@@ -4,7 +4,7 @@
 </p>
 <h2>Загрузка нескольких файлов</h2>
 <p>
-    @using (Html.BeginForm("LoadFileAsync", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    @using (Html.BeginForm("LoadFile", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
     {
         <input type="file"  name="fileUpload" multiple="true" /><br />
         <input type="submit" name="Submit" id="SubmitMultiply" value="Upload" />

@@ -30,27 +30,33 @@ namespace DynamicSun.Controllers
             return View();
         }
 
-        public ActionResult About(string YearSort, string MonthSort, int page = 1)
+        public ActionResult ViewWeather(string YearSort, string MonthSort, int page = 1)
         {
             int pageSize = 15;
             var sortList = weatherFromDb;
-            if ((YearSort != null && MonthSort != null && YearSort != "" && MonthSort!= "")|| (lastSortYear != "" && lastSortMonth != ""))
+            try
             {
-                if ((YearSort != null && MonthSort != null && YearSort != "" && MonthSort != ""))
+                if ((YearSort != null && MonthSort != null && YearSort != "" && MonthSort != "") || (lastSortYear != "" && lastSortMonth != "" && MonthSort != ""))
                 {
-                    lastSortYear = YearSort;
-                    lastSortMonth = MonthSort;
+                    if ((YearSort != null && MonthSort != null && YearSort != "" && MonthSort != ""))
+                    {
+                        lastSortYear = YearSort;
+                        lastSortMonth = MonthSort;
+                    }
+                    sortList = weatherFromDb.Where(i => (i.Date.Split('.')[2] == YearSort
+                                                && i.Date.Split('.')[1] == MonthSort)
+                                                || (i.Date.Split('.')[1] == lastSortMonth
+                                                && i.Date.Split('.')[2] == lastSortYear)).ToList();
                 }
-                sortList = weatherFromDb.Where(i =>( i.Date.Split('.')[2] == YearSort 
-                                            && i.Date.Split('.')[1] == MonthSort)
-                                            ||( i.Date.Split('.')[1] == lastSortMonth
-                                            && i.Date.Split('.')[2]== lastSortYear)).ToList();
-            }else if ((YearSort != null && YearSort != "")|| lastSortYear != "")
-            {
-                 if(YearSort !="" && YearSort != null) lastSortYear = YearSort;
-                sortList = weatherFromDb.Where(i => i.Date.Split('.')[2] == YearSort || i.Date.Split('.')[2] == lastSortYear).ToList();
+                else if ((YearSort != null && YearSort != "") || lastSortYear != "")
+                {
+                    if (YearSort != "" && YearSort != null) lastSortYear = YearSort;
+                    sortList = weatherFromDb.Where(i => i.Date.Split('.')[2] == YearSort || i.Date.Split('.')[2] == lastSortYear).ToList();
 
+                }
             }
+            catch (Exception e)
+            { }
             IEnumerable<Weather> WeatherPages = sortList.Skip((page - 1) * pageSize).Take(pageSize);
             PageInfo pageInfo = new PageInfo { PageNumber = page, PageSize = pageSize, TotalItems = sortList.Count };
             IndexViewModel ivm = new IndexViewModel { PageInfo = pageInfo, Weathers = WeatherPages };
@@ -59,7 +65,7 @@ namespace DynamicSun.Controllers
 
 
 
-        public  ActionResult LoadFileAsync(IEnumerable<HttpPostedFileBase> fileUpload)
+        public ActionResult LoadFile(IEnumerable<HttpPostedFileBase> fileUpload)
         {
             if (fileUpload != null)
             {
@@ -71,13 +77,12 @@ namespace DynamicSun.Controllers
                     if (filename != null)
                     {
                         file.SaveAs(Path.Combine(path, filename));
-                        await Task.Run(()=> LoadFileInBd(path + filename));
-
+                        LoadFileInBd(path + filename);
                     }
                     LoadArchives();
                 }
             }
-            return View("LoadFile");
+            return View();
         }
 
         public void LoadArchives()
@@ -118,14 +123,11 @@ namespace DynamicSun.Controllers
                                 var RowElements = sheet.GetRow(row).Cells;
                                 if (weatherFromDb.Exists(W => W.Date == RowElements[0].ToString()))
                                 {
-                                    //Проверяю на существование и обновляю , если уже есть в базе
                                     weather = weatherFromDb.Where(W => W.Date == RowElements[0].ToString()).FirstOrDefault();
-                                    db.SaveChanges();
                                 }
                                 else
                                 {
                                     weather = new Weather();
-
                                 }
                                 weather.Date = RowElements[0].ToString();
                                 weather.Time = RowElements[1].ToString();
@@ -141,12 +143,12 @@ namespace DynamicSun.Controllers
                                 weather.HorizontalVisibility = RowElements[10].ToString();
                                 weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].ToString();
                                 db.Weathers.Add(weather);
-                                db.SaveChanges();
                             }
                             catch (Exception e)
                             { }
                         }
                     }
+                    db.SaveChanges();
                 }
             }
             catch (Exception e)
