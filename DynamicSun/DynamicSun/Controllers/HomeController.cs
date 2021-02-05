@@ -30,7 +30,7 @@ namespace DynamicSun.Controllers
                     archives.Add(Ar.Name, false);
                 }
             }
-                ViewBag.Amount = 10;
+            ViewBag.Amount = 10;
             LoadArchiveFromDb(archive);
             LoadArchives();
             return View();
@@ -83,7 +83,9 @@ namespace DynamicSun.Controllers
                     if (filename != null)
                     {
                         file.SaveAs(Path.Combine(path, filename));
-                        LoadFileInBd(path + filename);
+                        //LoadFileInBd(path + filename);
+                        Thread loadInDbThread = new Thread(new ParameterizedThreadStart(LoadFileInBd));
+                        loadInDbThread.Start(path + filename);
                     }
                     LoadArchives();
                 }
@@ -105,8 +107,9 @@ namespace DynamicSun.Controllers
             ViewBag.Archives = archives;
         }
 
-        public void LoadFileInBd(string path)
+        public async void LoadFileInBd(object obj)
         {
+            string path = (string)obj;
             XSSFWorkbook hssfwb;
             try
             {
@@ -125,35 +128,31 @@ namespace DynamicSun.Controllers
                         {
                             if (sheet.GetRow(row) != null)
                             {
-                                try
+                                Weather weather;
+                                var RowElements = sheet.GetRow(row).Cells;
+                                if (weatherFromDb.Exists(W => W.Date == RowElements[0].ToString()))
                                 {
-                                    Weather weather;
-                                    var RowElements = sheet.GetRow(row).Cells;
-                                    if (weatherFromDb.Exists(W => W.Date == RowElements[0].ToString()))
-                                    {
-                                        weather = weatherFromDb.Where(W => W.Date == RowElements[0].ToString()).FirstOrDefault();
-                                    }
-                                    else
-                                    {
-                                        weather = new Weather();
-                                    }
-                                    weather.Date = RowElements[0].ToString();
-                                    weather.Time = RowElements[1].ToString();
-                                    weather.Temp = RowElements[2].ToString();
-                                    weather.Wet = RowElements[3].ToString();
-                                    weather.DewPoint = RowElements[4].ToString();
-                                    weather.Pressure = RowElements[5].ToString();
-                                    weather.WindDirect = RowElements[6].ToString();
-                                    weather.WindSpeed = RowElements[7].ToString();
-                                    weather.CloudCover = RowElements[8].ToString();
-                                    weather.LowLimitCloud = RowElements[9].ToString();
-                                    weather.ArchiveName = path.Split('\\').Last();
-                                    weather.HorizontalVisibility = RowElements[10].ToString();
-                                    weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].ToString();
-                                    db.Weathers.Add(weather);
+                                    weather = weatherFromDb.Where(W => W.Date == RowElements[0].ToString()).FirstOrDefault();
                                 }
-                                catch (Exception e)
-                                { }
+                                else
+                                {
+                                    weather = new Weather();
+                                }
+                                weather.Date = RowElements[0].ToString();
+                                weather.Time = RowElements[1].ToString();
+                                weather.Temp = RowElements[2].ToString();
+                                weather.Wet = RowElements[3].ToString();
+                                weather.DewPoint = RowElements[4].ToString();
+                                weather.Pressure = RowElements[5].ToString();
+                                weather.WindDirect = RowElements[6].ToString();
+                                weather.WindSpeed = RowElements[7].ToString();
+                                weather.CloudCover = RowElements[8].ToString();
+                                weather.LowLimitCloud = RowElements[9].ToString();
+                                weather.ArchiveName = path.Split('\\').Last();
+                                weather.HorizontalVisibility = RowElements[10].ToString();
+                                weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].ToString();
+                                db.Weathers.Add(weather);
+
                             }
                         }
                         db.SaveChanges();
@@ -163,15 +162,15 @@ namespace DynamicSun.Controllers
             catch (Exception e)
             { }
         }
-        public void LoadArchiveFromDb(string archive)
+        public void LoadArchiveFromDb(string archive="")
         {
             if (!archives[archive])
             {
-                using (WeatherContext db = new WeatherContext())
-                {
-                    weatherFromDb.AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
-                    ViewBag.weatherFromdb = weatherFromDb;
-                }
+                    using (WeatherContext db = new WeatherContext())
+                    {
+                        weatherFromDb.AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
+                        ViewBag.weatherFromdb = weatherFromDb;
+                    }
             }
         }
     }
