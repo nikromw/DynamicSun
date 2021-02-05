@@ -27,12 +27,13 @@ namespace DynamicSun.Controllers
             {
                 foreach (var Ar in db.Archives.ToList())
                 {
+                    if(!archives.ContainsKey(Ar.Name))
                     archives.Add(Ar.Name, false);
                 }
             }
             ViewBag.Amount = 10;
             LoadArchiveFromDb(archive);
-            LoadArchives();
+            ViewBag.Archives = archives;
             return View();
         }
 
@@ -87,24 +88,10 @@ namespace DynamicSun.Controllers
                         Thread loadInDbThread = new Thread(new ParameterizedThreadStart(LoadFileInBd));
                         loadInDbThread.Start(path + filename);
                     }
-                    LoadArchives();
+                    ViewBag.Archives = archives;
                 }
             }
             return View();
-        }
-
-        public void LoadArchives()
-        {
-            string path = AppDomain.CurrentDomain.BaseDirectory;
-            string[] files = Directory.GetFiles(path + "\\App_Data\\");
-            foreach (var file in files)
-            {
-                if (!archives.ContainsKey(file.Split('\\').Last()))
-                {
-                    archives.Add(file.Split('\\').Last(), false);
-                }
-            }
-            ViewBag.Archives = archives;
         }
 
         public async void LoadFileInBd(object obj)
@@ -118,8 +105,12 @@ namespace DynamicSun.Controllers
                     hssfwb = new XSSFWorkbook(file);
                 }
                 var a = hssfwb.NumberOfSheets;
+
+                Archive archive = new Archive();
+                archive.Name = path.Split('\\').Last();
                 using (WeatherContext db = new WeatherContext())
                 {
+                    db.Archives.Add(archive);
                     var weatherFromDb = db.Weathers.ToList();
                     for (int i = 0; i < a; i++)
                     {
@@ -152,7 +143,6 @@ namespace DynamicSun.Controllers
                                 weather.HorizontalVisibility = RowElements[10].ToString();
                                 weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].ToString();
                                 db.Weathers.Add(weather);
-
                             }
                         }
                         db.SaveChanges();
@@ -162,9 +152,9 @@ namespace DynamicSun.Controllers
             catch (Exception e)
             { }
         }
-        public void LoadArchiveFromDb(string archive="")
+        public void LoadArchiveFromDb(string archive)
         {
-            if (!archives[archive])
+            if (archive!= null && !archives[archive])
             {
                     using (WeatherContext db = new WeatherContext())
                     {
