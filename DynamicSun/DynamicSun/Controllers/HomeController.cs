@@ -17,14 +17,20 @@ namespace DynamicSun.Controllers
 
     public class HomeController : Controller
     {
-        static WeatherContext db = new WeatherContext();
         static List<Weather> weatherFromDb = new List<Weather>();
         static Dictionary<string, bool> archives = new Dictionary<string, bool>();
         static string lastSortYear = "";
         static string lastSortMonth = "";
         public ActionResult Index(string archive)
         {
-            ViewBag.Amount = 10;
+            using (WeatherContext db = new WeatherContext())
+            {
+                foreach (var Ar in db.Archives.ToList())
+                {
+                    archives.Add(Ar.Name, false);
+                }
+            }
+                ViewBag.Amount = 10;
             LoadArchiveFromDb(archive);
             LoadArchives();
             return View();
@@ -109,46 +115,49 @@ namespace DynamicSun.Controllers
                     hssfwb = new XSSFWorkbook(file);
                 }
                 var a = hssfwb.NumberOfSheets;
-                var weatherFromDb = db.Weathers.ToList();
-                for (int i = 0; i < a; i++)
+                using (WeatherContext db = new WeatherContext())
                 {
-                    ISheet sheet = hssfwb.GetSheetAt(i);
-                    for (int row = 5; row <= sheet.LastRowNum; row++)
+                    var weatherFromDb = db.Weathers.ToList();
+                    for (int i = 0; i < a; i++)
                     {
-                        if (sheet.GetRow(row) != null)
+                        ISheet sheet = hssfwb.GetSheetAt(i);
+                        for (int row = 5; row <= sheet.LastRowNum; row++)
                         {
-                            try
+                            if (sheet.GetRow(row) != null)
                             {
-                                Weather weather;
-                                var RowElements = sheet.GetRow(row).Cells;
-                                if (weatherFromDb.Exists(W => W.Date == RowElements[0].ToString()))
+                                try
                                 {
-                                    weather = weatherFromDb.Where(W => W.Date == RowElements[0].ToString()).FirstOrDefault();
+                                    Weather weather;
+                                    var RowElements = sheet.GetRow(row).Cells;
+                                    if (weatherFromDb.Exists(W => W.Date == RowElements[0].ToString()))
+                                    {
+                                        weather = weatherFromDb.Where(W => W.Date == RowElements[0].ToString()).FirstOrDefault();
+                                    }
+                                    else
+                                    {
+                                        weather = new Weather();
+                                    }
+                                    weather.Date = RowElements[0].ToString();
+                                    weather.Time = RowElements[1].ToString();
+                                    weather.Temp = RowElements[2].ToString();
+                                    weather.Wet = RowElements[3].ToString();
+                                    weather.DewPoint = RowElements[4].ToString();
+                                    weather.Pressure = RowElements[5].ToString();
+                                    weather.WindDirect = RowElements[6].ToString();
+                                    weather.WindSpeed = RowElements[7].ToString();
+                                    weather.CloudCover = RowElements[8].ToString();
+                                    weather.LowLimitCloud = RowElements[9].ToString();
+                                    weather.ArchiveName = path.Split('\\').Last();
+                                    weather.HorizontalVisibility = RowElements[10].ToString();
+                                    weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].ToString();
+                                    db.Weathers.Add(weather);
                                 }
-                                else
-                                {
-                                    weather = new Weather();
-                                }
-                                weather.Date = RowElements[0].ToString();
-                                weather.Time = RowElements[1].ToString();
-                                weather.Temp = RowElements[2].ToString();
-                                weather.Wet = RowElements[3].ToString();
-                                weather.DewPoint = RowElements[4].ToString();
-                                weather.Pressure = RowElements[5].ToString();
-                                weather.WindDirect = RowElements[6].ToString();
-                                weather.WindSpeed = RowElements[7].ToString();
-                                weather.CloudCover = RowElements[8].ToString();
-                                weather.LowLimitCloud = RowElements[9].ToString();
-                                weather.ArchiveName = path.Split('\\').Last();
-                                weather.HorizontalVisibility = RowElements[10].ToString();
-                                weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].ToString();
-                                db.Weathers.Add(weather);
+                                catch (Exception e)
+                                { }
                             }
-                            catch (Exception e)
-                            { }
                         }
+                        db.SaveChanges();
                     }
-                    db.SaveChanges();
                 }
             }
             catch (Exception e)
@@ -156,16 +165,14 @@ namespace DynamicSun.Controllers
         }
         public void LoadArchiveFromDb(string archive)
         {
-            try
+            if (!archives[archive])
             {
-                weatherFromDb.RemoveAll(i => i.ArchiveName == archive);
-                weatherFromDb.AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
-                ViewBag.weatherFromdb = weatherFromDb;
+                using (WeatherContext db = new WeatherContext())
+                {
+                    weatherFromDb.AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
+                    ViewBag.weatherFromdb = weatherFromDb;
+                }
             }
-            catch (Exception e)
-            { }
         }
-
-
     }
 }

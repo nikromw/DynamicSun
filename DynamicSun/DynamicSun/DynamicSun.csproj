@@ -153,6 +153,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\PagingHelpers.cs" />
+    <Compile Include="Models\Archive.cs" />
     <Compile Include="Models\PageInfo.cs" />
     <Compile Include="Models\Weather.cs" />
     <Compile Include="Models\WeatherContext.cs" />
