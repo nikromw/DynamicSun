@@ -37,21 +37,22 @@ namespace DynamicSun.Controllers
             return View();
         }
 
-        public ActionResult ViewWeather(int YearFilt=0, int MonthFiltr =0, int page = 1)
+        public ActionResult ViewWeather(int YearFilt = 0, int MonthFiltr = 0, int page = 1)
         {
             int pageSize = 15;
             var sortList = weatherFromDb;
-            if (YearFilt != 0 && MonthFiltr != 0 || lastFiltrYear !=0 && lastFiltrMonth != 0 )
+            if (YearFilt != 0 && MonthFiltr != 0 || lastFiltrYear != 0 && lastFiltrMonth != 0)
             {
                 if (YearFilt != 0 && MonthFiltr != 0)
                 {
                     lastFiltrMonth = Convert.ToInt32(MonthFiltr);
                     lastFiltrYear = Convert.ToInt32(YearFilt);
                 }
-                sortList = sortList.Where(i => (i.Date.Value.Year == YearFilt && i.Date.Value.Month == MonthFiltr) 
+
+                sortList = sortList.Where(i => (i.Date.Value.Year == YearFilt && i.Date.Value.Month == MonthFiltr)
                 || (i.Date.Value.Year == lastFiltrYear && i.Date.Value.Month == lastFiltrMonth)).ToList();
             }
-            else if (YearFilt != 0 || lastFiltrYear != 0 )
+            else if (YearFilt != 0 || lastFiltrYear != 0)
             {
                 if (YearFilt != 0)
                 {
@@ -69,7 +70,7 @@ namespace DynamicSun.Controllers
 
 
 
-        public ActionResult LoadFile(IEnumerable<HttpPostedFileBase> fileUpload)
+        public async Task<ActionResult> LoadFile(IEnumerable<HttpPostedFileBase> fileUpload)
         {
             if (fileUpload != null)
             {
@@ -80,9 +81,7 @@ namespace DynamicSun.Controllers
                     string filename = Path.GetFileName(file.FileName);
                     if (filename != null)
                     {
-                        file.SaveAs(Path.Combine(path, filename));
-                        Thread loadInDbThread = new Thread(new ParameterizedThreadStart(LoadFileInBd));
-                        loadInDbThread.Start(path + filename);
+                        LoadFileInBd(file);
                     }
                     ViewBag.Archives = archives;
                 }
@@ -90,27 +89,24 @@ namespace DynamicSun.Controllers
             return View();
         }
 
-        public async void LoadFileInBd(object obj)
+        public void LoadFileInBd(object obj)
         {
-            string path = (string)obj;
+            HttpPostedFileWrapper path = (HttpPostedFileWrapper)obj;
             XSSFWorkbook hssfwb;
             try
             {
-                using (FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read))
-                {
-                    hssfwb = new XSSFWorkbook(file);
-                }
+               
+                hssfwb = new XSSFWorkbook(path.InputStream);
                 var a = hssfwb.NumberOfSheets;
 
                 Archive archive = new Archive();
-                archive.Name = path.Split('\\').Last();
+                archive.Name = path.FileName;
                 using (WeatherContext db = new WeatherContext())
                 {
                     db.Archives.Add(archive);
                     var weatherFromDb = db.Weathers.ToList();
                     for (int i = 0; i < a; i++)
                     {
-
                         ISheet sheet = hssfwb.GetSheetAt(i);
                         for (int row = 5; row <= sheet.LastRowNum; row++)
                         {
@@ -137,7 +133,7 @@ namespace DynamicSun.Controllers
                                     weather.LowLimitCloud = Convert.ToDouble(RowElements[9].CellType == CellType.String ? RowElements[9].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[9].NumericCellValue.ToString());
                                     weather.HorizontalVisibility = RowElements[10].ToString();
                                     weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].StringCellValue;
-                                    weather.ArchiveName = path.Split('\\').Last();
+                                    weather.ArchiveName = path.FileName;
                                     db.Weathers.Add(weather);
                                 }
                             }
@@ -151,6 +147,9 @@ namespace DynamicSun.Controllers
             catch (Exception e)
             { }
         }
+
+        //Выгружаю только те архивы, которые нужны. И запретил повторную выгрузку.
+        //Вся работа с погодой будет только со статическим массивом, без постоянной выгрузки из бд
         public void LoadArchiveFromDb(string archive)
         {
             if (archive != null && !archives[archive])
