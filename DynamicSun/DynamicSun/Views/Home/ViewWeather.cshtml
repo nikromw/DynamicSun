@@ -35,9 +35,8 @@
             || ViewBag.YearFiltr == 0)
         {
         <tr>
-            <td>@item.Date</td>
-            <td>@item.Date.Value.Hour</td>
-            <td>@item.Date.Value.Minute</td>
+            <td>@(item.Date.Value.Day +":"+item.Date.Value.Month +":"+ item.Date.Value.Year)</td>
+            <td>@(item.Date.Value.Hour+":"+item.Date.Value.Minute)</td>
             <td>@item.Temp</td>
             <td>@item.Wet</td>
             <td>@item.DewPoint</td>
