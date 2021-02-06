@@ -32,7 +32,7 @@
     {
         <tr>
             <td>@item.Date</td>
-            <td>@item.Time</td>
+            <td>@(item.Date.Value.Hour +item.Date.Value.Minute) </td>
             <td>@item.Temp</td>
             <td>@item.Wet</td>
             <td>@item.DewPoint</td>

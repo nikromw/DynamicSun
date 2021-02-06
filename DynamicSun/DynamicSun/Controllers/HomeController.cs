@@ -19,16 +19,16 @@ namespace DynamicSun.Controllers
     {
         static List<Weather> weatherFromDb = new List<Weather>();
         static Dictionary<string, bool> archives = new Dictionary<string, bool>();
-        static string lastSortYear = "";
-        static string lastSortMonth = "";
+        static string lastFiltrYear = "";
+        static string lastFiltrMonth = "";
         public ActionResult Index(string archive)
         {
             using (WeatherContext db = new WeatherContext())
             {
                 foreach (var Ar in db.Archives.ToList())
                 {
-                    if(!archives.ContainsKey(Ar.Name))
-                    archives.Add(Ar.Name, false);
+                    if (!archives.ContainsKey(Ar.Name))
+                        archives.Add(Ar.Name, false);
                 }
             }
             ViewBag.Amount = 10;
@@ -37,28 +37,28 @@ namespace DynamicSun.Controllers
             return View();
         }
 
-        public ActionResult ViewWeather(string YearSort, string MonthSort, int page = 1)
+        public ActionResult ViewWeather(string YearFilt, string MonthFiltr, int page = 1)
         {
             int pageSize = 15;
             var sortList = weatherFromDb;
             try
             {
-                if ((YearSort != null && MonthSort != null && YearSort != "" && MonthSort != "") || (lastSortYear != "" && lastSortMonth != "" && MonthSort != ""))
+                if ((YearFilt != null && MonthFiltr != null && YearFilt != "" && MonthFiltr != "") || (lastFiltrYear != "" && lastFiltrMonth != "" && MonthFiltr != ""))
                 {
-                    if ((YearSort != null && MonthSort != null && YearSort != "" && MonthSort != ""))
+                    if ((YearFilt != null && MonthFiltr != null && YearFilt != "" && MonthFiltr != ""))
                     {
-                        lastSortYear = YearSort;
-                        lastSortMonth = MonthSort;
+                        lastFiltrYear = YearFilt;
+                        lastFiltrMonth = MonthFiltr;
                     }
-                    sortList = weatherFromDb.Where(i => (i.Date.Split('.')[2] == YearSort
-                                                && i.Date.Split('.')[1] == MonthSort)
-                                                || (i.Date.Split('.')[1] == lastSortMonth
-                                                && i.Date.Split('.')[2] == lastSortYear)).ToList();
+                    sortList = weatherFromDb.Where(i => (i.Date.Value.Year == Convert.ToInt32(YearFilt)
+                                                && i.Date.Value.Month == Convert.ToInt32(MonthFiltr))
+                                                || (i.Date.Value.Year == Convert.ToInt32(lastFiltrMonth)
+                                                && i.Date.Value.Month == Convert.ToInt32(lastFiltrYear))).ToList();
                 }
-                else if ((YearSort != null && YearSort != "") || lastSortYear != "")
+                else if ((YearFilt != null && YearFilt != "") || lastFiltrYear != "")
                 {
-                    if (YearSort != "" && YearSort != null) lastSortYear = YearSort;
-                    sortList = weatherFromDb.Where(i => i.Date.Split('.')[2] == YearSort || i.Date.Split('.')[2] == lastSortYear).ToList();
+                    if (YearFilt != "" && YearFilt != null) lastFiltrYear = YearFilt;
+                    sortList = weatherFromDb.Where(i => i.Date.Value.Year == Convert.ToInt32(YearFilt) || i.Date.Value.Year == Convert.ToInt32(lastFiltrYear)).ToList();
 
                 }
             }
@@ -114,35 +114,40 @@ namespace DynamicSun.Controllers
                     var weatherFromDb = db.Weathers.ToList();
                     for (int i = 0; i < a; i++)
                     {
+
                         ISheet sheet = hssfwb.GetSheetAt(i);
                         for (int row = 5; row <= sheet.LastRowNum; row++)
                         {
-                            if (sheet.GetRow(row) != null)
+                            try
                             {
-                                Weather weather;
-                                var RowElements = sheet.GetRow(row).Cells;
-                                if (weatherFromDb.Exists(W => W.Date == RowElements[0].ToString()))
+                                if (sheet.GetRow(row) != null)
                                 {
-                                    weather = weatherFromDb.Where(W => W.Date == RowElements[0].ToString()).FirstOrDefault();
+                                    Weather weather = new Weather();
+                                    var RowElements = sheet.GetRow(row).Cells;
+
+                                    weather.Date = new DateTime(Convert.ToInt32(RowElements[0].ToString().Split('.')[2]),
+                                                                Convert.ToInt32(RowElements[0].ToString().Split('.')[1]),
+                                                                Convert.ToInt32(RowElements[0].ToString().Split('.')[0]),
+                                                                Convert.ToInt32(RowElements[1].ToString().Split(':')[0]),
+                                                                Convert.ToInt32(RowElements[1].ToString().Split(':')[1]),
+                                                                0);
+                                    weather.Temp = Convert.ToDouble(RowElements[2].CellType == CellType.String ? RowElements[2].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[2].NumericCellValue.ToString());
+                                    weather.Wet = Convert.ToDouble(RowElements[3].CellType == CellType.String ? RowElements[3].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[3].NumericCellValue.ToString());
+                                    weather.DewPoint = Convert.ToDouble(RowElements[4].CellType == CellType.String ? RowElements[4].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[4].NumericCellValue.ToString());
+                                    weather.Pressure = Convert.ToDouble(RowElements[5].CellType == CellType.String ? RowElements[5].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[5].NumericCellValue.ToString());
+                                    weather.WindDirect = RowElements[6].ToString();
+                                    weather.WindSpeed = Convert.ToDouble(RowElements[7].CellType == CellType.String ? RowElements[7].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[7].NumericCellValue.ToString());
+                                    weather.CloudCover = Convert.ToDouble(RowElements[8].CellType == CellType.String ? RowElements[8].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[8].NumericCellValue.ToString());
+                                    weather.LowLimitCloud = Convert.ToDouble(RowElements[9].CellType == CellType.String ? RowElements[9].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[9].NumericCellValue.ToString());
+                                    weather.HorizontalVisibility = RowElements[10].ToString();
+                                    weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].StringCellValue;
+                                    weather.ArchiveName = path.Split('\\').Last();
+                                    db.Weathers.Add(weather);
                                 }
-                                else
-                                {
-                                    weather = new Weather();
-                                }
-                                weather.Date = RowElements[0].ToString();
-                                weather.Time = RowElements[1].ToString();
-                                weather.Temp = RowElements[2].ToString();
-                                weather.Wet = RowElements[3].ToString();
-                                weather.DewPoint = RowElements[4].ToString();
-                                weather.Pressure = RowElements[5].ToString();
-                                weather.WindDirect = RowElements[6].ToString();
-                                weather.WindSpeed = RowElements[7].ToString();
-                                weather.CloudCover = RowElements[8].ToString();
-                                weather.LowLimitCloud = RowElements[9].ToString();
-                                weather.ArchiveName = path.Split('\\').Last();
-                                weather.HorizontalVisibility = RowElements[10].ToString();
-                                weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].ToString();
-                                db.Weathers.Add(weather);
+                            }
+                            catch (Exception e)
+                            {
+
                             }
                         }
                         db.SaveChanges();
@@ -154,13 +159,14 @@ namespace DynamicSun.Controllers
         }
         public void LoadArchiveFromDb(string archive)
         {
-            if (archive!= null && !archives[archive])
+            if (archive != null && !archives[archive])
             {
-                    using (WeatherContext db = new WeatherContext())
-                    {
-                        weatherFromDb.AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
-                        ViewBag.weatherFromdb = weatherFromDb;
-                    }
+                using (WeatherContext db = new WeatherContext())
+                {
+                    archives[archive] = true;
+                    weatherFromDb.AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
+                    ViewBag.weatherFromdb = weatherFromDb;
+                }
             }
         }
     }
