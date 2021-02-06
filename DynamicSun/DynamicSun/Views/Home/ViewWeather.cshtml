@@ -6,9 +6,9 @@
     <dib>
         <form action="~/Home/ViewWeather">
             <label>Sort by year</label><br>
-            <input type="text" name="YearSort" /><br>
+            <input type="number" name="YearFilt" /><br>
             <label>Sort by month</label><br>
-            <input type="text" name="MonthSort" />
+            <input type="number" name="MonthFiltr" />
             <input type="submit" value="Sort"><br>
         </form>
     </dib>
@@ -30,9 +30,13 @@
     </tr>
     @foreach (var item in Model.Weathers)
     {
+        if ((Convert.ToInt32(item.Date.Value.Year) == ViewBag.YearFiltr&& ViewBag.MonthFiltr == 0)
+            ||( Convert.ToInt32(item.Date.Value.Year) == ViewBag.YearFiltr && (Convert.ToInt32(item.Date.Value.Month) == ViewBag.MonthFiltr)) 
+            || ViewBag.YearFiltr == 0)
+        {
         <tr>
             <td>@item.Date</td>
-            <td>@(item.Date.Value.Hour +item.Date.Value.Minute) </td>
+            <td>@(item.Date.Value.Hour + item.Date.Value.Minute) </td>
             <td>@item.Temp</td>
             <td>@item.Wet</td>
             <td>@item.DewPoint</td>
@@ -44,6 +48,7 @@
             <td>@item.HorizontalVisibility</td>
             <td>@item.WeatherEffect</td>
         </tr>
+        }
     }
 </table>
 <br />

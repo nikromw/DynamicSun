@@ -19,8 +19,8 @@ namespace DynamicSun.Controllers
     {
         static List<Weather> weatherFromDb = new List<Weather>();
         static Dictionary<string, bool> archives = new Dictionary<string, bool>();
-        static string lastFiltrYear = "";
-        static string lastFiltrMonth = "";
+        static int lastFiltrYear = 0;
+        static int lastFiltrMonth = 0;
         public ActionResult Index(string archive)
         {
             using (WeatherContext db = new WeatherContext())
@@ -37,33 +37,30 @@ namespace DynamicSun.Controllers
             return View();
         }
 
-        public ActionResult ViewWeather(string YearFilt, string MonthFiltr, int page = 1)
+        public ActionResult ViewWeather(int YearFilt=0, int MonthFiltr =0, int page = 1)
         {
             int pageSize = 15;
             var sortList = weatherFromDb;
-            try
+            if (YearFilt != 0 && MonthFiltr != 0 || lastFiltrYear !=0 && lastFiltrMonth != 0 )
             {
-                if ((YearFilt != null && MonthFiltr != null && YearFilt != "" && MonthFiltr != "") || (lastFiltrYear != "" && lastFiltrMonth != "" && MonthFiltr != ""))
+                if (YearFilt != 0 && MonthFiltr != 0)
                 {
-                    if ((YearFilt != null && MonthFiltr != null && YearFilt != "" && MonthFiltr != ""))
-                    {
-                        lastFiltrYear = YearFilt;
-                        lastFiltrMonth = MonthFiltr;
-                    }
-                    sortList = weatherFromDb.Where(i => (i.Date.Value.Year == Convert.ToInt32(YearFilt)
-                                                && i.Date.Value.Month == Convert.ToInt32(MonthFiltr))
-                                                || (i.Date.Value.Year == Convert.ToInt32(lastFiltrMonth)
-                                                && i.Date.Value.Month == Convert.ToInt32(lastFiltrYear))).ToList();
+                    lastFiltrMonth = Convert.ToInt32(MonthFiltr);
+                    lastFiltrYear = Convert.ToInt32(YearFilt);
                 }
-                else if ((YearFilt != null && YearFilt != "") || lastFiltrYear != "")
-                {
-                    if (YearFilt != "" && YearFilt != null) lastFiltrYear = YearFilt;
-                    sortList = weatherFromDb.Where(i => i.Date.Value.Year == Convert.ToInt32(YearFilt) || i.Date.Value.Year == Convert.ToInt32(lastFiltrYear)).ToList();
-
-                }
+                sortList = sortList.Where(i => (i.Date.Value.Year == YearFilt && i.Date.Value.Month == MonthFiltr) 
+                || (i.Date.Value.Year == lastFiltrYear && i.Date.Value.Month == lastFiltrMonth)).ToList();
             }
-            catch (Exception e)
-            { }
+            else if (YearFilt != 0 || lastFiltrYear != 0 )
+            {
+                if (YearFilt != 0)
+                {
+                    lastFiltrYear = Convert.ToInt32(YearFilt);
+                }
+                sortList = sortList.Where(i => i.Date.Value.Year == YearFilt || i.Date.Value.Year == lastFiltrYear).ToList();
+            }
+            ViewBag.YearFiltr = lastFiltrYear;
+            ViewBag.MonthFiltr = lastFiltrMonth;
             IEnumerable<Weather> WeatherPages = sortList.Skip((page - 1) * pageSize).Take(pageSize);
             PageInfo pageInfo = new PageInfo { PageNumber = page, PageSize = pageSize, TotalItems = sortList.Count };
             IndexViewModel ivm = new IndexViewModel { PageInfo = pageInfo, Weathers = WeatherPages };
@@ -84,7 +81,6 @@ namespace DynamicSun.Controllers
                     if (filename != null)
                     {
                         file.SaveAs(Path.Combine(path, filename));
-                        //LoadFileInBd(path + filename);
                         Thread loadInDbThread = new Thread(new ParameterizedThreadStart(LoadFileInBd));
                         loadInDbThread.Start(path + filename);
                     }
@@ -146,9 +142,7 @@ namespace DynamicSun.Controllers
                                 }
                             }
                             catch (Exception e)
-                            {
-
-                            }
+                            { }
                         }
                         db.SaveChanges();
                     }
