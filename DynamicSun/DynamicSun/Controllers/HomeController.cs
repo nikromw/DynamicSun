@@ -22,10 +22,8 @@ namespace DynamicSun.Controllers
             if (Session["Archives"] == null && Session["weatherFromdb"] == null)
             {
                 Session["Archives"] = new Dictionary<string, bool>();
-                Session["weatherFromdb"] = new List<Weather>(); 
+                Session["weatherFromdb"] = new List<Weather>();
             }
-            Session["lastFiltrMonth"] = 0;
-            Session["lastFiltrYear"] = 0;
             using (WeatherContext db = new WeatherContext())
             {
                 foreach (var Ar in db.Archives.ToList())
@@ -44,6 +42,11 @@ namespace DynamicSun.Controllers
         public ActionResult ViewWeather(int YearFilt = 0, int MonthFiltr = 0, int page = 1)
         {
             int pageSize = 15;
+            if (Session["lastFiltrYear"]== null || Session["lastFiltrMonth"]==null )
+            {
+                Session["lastFiltrMonth"] = 0;
+                Session["lastFiltrYear"] = 0;
+            }
             List<Weather> sortList = (List<Weather>)Session["weatherFromdb"] == null ? new List<Weather>() : (List<Weather>)Session["weatherFromdb"];
             if (YearFilt != 0 && MonthFiltr != 0 || (int)Session["lastFiltrYear"] != 0 && (int)Session["lastFiltrMonth"] != 0)
             {
@@ -80,7 +83,10 @@ namespace DynamicSun.Controllers
             {
                 foreach (var file in fileUpload)
                 {
-                    LoadFileInBd(file);
+                    if (Session["Archives"]!= null && !((Dictionary<string, bool>)Session["Archives"]).ContainsKey(file.FileName))
+                    {
+                        LoadFileInBd(file);
+                    }
                 }
             }
             return View();
@@ -90,71 +96,73 @@ namespace DynamicSun.Controllers
         {
             HttpPostedFileWrapper path = (HttpPostedFileWrapper)obj;
             XSSFWorkbook hssfwb;
-            try
+
+
+            hssfwb = new XSSFWorkbook(path.InputStream);
+            var a = hssfwb.NumberOfSheets;
+
+            Archive archive = new Archive();
+            archive.Name = path.FileName;
+            using (WeatherContext db = new WeatherContext())
             {
-
-                hssfwb = new XSSFWorkbook(path.InputStream);
-                var a = hssfwb.NumberOfSheets;
-
-                Archive archive = new Archive();
-                archive.Name = path.FileName;
-                using (WeatherContext db = new WeatherContext())
+                db.Archives.Add(archive);
+                var weatherFromDb = db.Weathers.ToList();
+                for (int i = 0; i < a; i++)
                 {
-                    db.Archives.Add(archive);
-                    var weatherFromDb = db.Weathers.ToList();
-                    for (int i = 0; i < a; i++)
+                    ISheet sheet = hssfwb.GetSheetAt(i);
+                    for (int row = 5; row <= sheet.LastRowNum; row++)
                     {
-                        ISheet sheet = hssfwb.GetSheetAt(i);
-                        for (int row = 5; row <= sheet.LastRowNum; row++)
+                        try
                         {
-                            try
+                            if (sheet.GetRow(row) != null)
                             {
-                                if (sheet.GetRow(row) != null)
-                                {
-                                    Weather weather = new Weather();
-                                    var RowElements = sheet.GetRow(row).Cells;
+                                Weather weather = new Weather();
+                                var RowElements = sheet.GetRow(row).Cells;
 
-                                    weather.Date = new DateTime(Convert.ToInt32(RowElements[0].ToString().Split('.')[2]),
-                                                                Convert.ToInt32(RowElements[0].ToString().Split('.')[1]),
-                                                                Convert.ToInt32(RowElements[0].ToString().Split('.')[0]),
-                                                                Convert.ToInt32(RowElements[1].ToString().Split(':')[0]),
-                                                                Convert.ToInt32(RowElements[1].ToString().Split(':')[1]),
-                                                                0);
-                                    weather.Temp = Convert.ToDouble(RowElements[2].CellType == CellType.String ? RowElements[2].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[2].NumericCellValue.ToString());
-                                    weather.Wet = Convert.ToDouble(RowElements[3].CellType == CellType.String ? RowElements[3].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[3].NumericCellValue.ToString());
-                                    weather.DewPoint = Convert.ToDouble(RowElements[4].CellType == CellType.String ? RowElements[4].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[4].NumericCellValue.ToString());
-                                    weather.Pressure = Convert.ToDouble(RowElements[5].CellType == CellType.String ? RowElements[5].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[5].NumericCellValue.ToString());
-                                    weather.WindDirect = RowElements[6].ToString();
-                                    weather.WindSpeed = Convert.ToDouble(RowElements[7].CellType == CellType.String ? RowElements[7].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[7].NumericCellValue.ToString());
-                                    weather.CloudCover = Convert.ToDouble(RowElements[8].CellType == CellType.String ? RowElements[8].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[8].NumericCellValue.ToString());
-                                    weather.LowLimitCloud = Convert.ToDouble(RowElements[9].CellType == CellType.String ? RowElements[9].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[9].NumericCellValue.ToString());
-                                    weather.HorizontalVisibility = RowElements[10].ToString();
-                                    weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].StringCellValue;
-                                    weather.ArchiveName = path.FileName;
-                                    db.Weathers.Add(weather);
-                                }
+                                weather.Date = new DateTime(Convert.ToInt32(RowElements[0].ToString().Split('.')[2]),
+                                                            Convert.ToInt32(RowElements[0].ToString().Split('.')[1]),
+                                                            Convert.ToInt32(RowElements[0].ToString().Split('.')[0]),
+                                                            Convert.ToInt32(RowElements[1].ToString().Split(':')[0]),
+                                                            Convert.ToInt32(RowElements[1].ToString().Split(':')[1]),
+                                                            0);
+                                weather.Temp = Convert.ToDouble(RowElements[2].CellType == CellType.String ? RowElements[2].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[2].NumericCellValue.ToString());
+                                weather.Wet = Convert.ToDouble(RowElements[3].CellType == CellType.String ? RowElements[3].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[3].NumericCellValue.ToString());
+                                weather.DewPoint = Convert.ToDouble(RowElements[4].CellType == CellType.String ? RowElements[4].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[4].NumericCellValue.ToString());
+                                weather.Pressure = Convert.ToDouble(RowElements[5].CellType == CellType.String ? RowElements[5].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[5].NumericCellValue.ToString());
+                                weather.WindDirect = RowElements[6].ToString();
+                                weather.WindSpeed = Convert.ToDouble(RowElements[7].CellType == CellType.String ? RowElements[7].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[7].NumericCellValue.ToString());
+                                weather.CloudCover = Convert.ToDouble(RowElements[8].CellType == CellType.String ? RowElements[8].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[8].NumericCellValue.ToString());
+                                weather.LowLimitCloud = Convert.ToDouble(RowElements[9].CellType == CellType.String ? RowElements[9].RichStringCellValue.String == " " ? null : RowElements[7].RichStringCellValue.String : RowElements[9].NumericCellValue.ToString());
+                                weather.HorizontalVisibility = RowElements[10].ToString();
+                                weather.WeatherEffect = RowElements.ElementAtOrDefault(11) == null ? "" : RowElements[11].StringCellValue;
+                                weather.ArchiveName = path.FileName;
+                                db.Weathers.Add(weather);
                             }
-                            catch (Exception e)
-                            { }
+
                         }
-                        db.SaveChanges();
+                        catch (Exception e)
+                        {
+                            using (FileStream fstream = new FileStream($"Log.txt", FileMode.OpenOrCreate))
+                            {
+                                byte[] array = System.Text.Encoding.Default.GetBytes($"Ошибка чтения файла: {path.FileName}, страница : {i} , строка {row}  ") ; 
+                                fstream.Write(array, 0, array.Length);
+                            }
+                        }
                     }
-                }
-            }
-            catch (Exception e)
-            { }
-        }
-        public void LoadArchiveFromDb(string archive)
-        {
-            if (archive != null && !((Dictionary<string, bool>)Session["Archives"])[archive])
-            {
-                using (WeatherContext db = new WeatherContext())
-                {
-                    ((Dictionary<string, bool>)Session["Archives"])[archive] = true;
-                    //List<Weather> weatherFromDb = (db.Weathers.Where(i => i.ArchiveName == archive).ToList());
-                    ((List<Weather>)(Session["weatherFromdb"])).AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
-                }
+                    db.SaveChanges();
             }
         }
     }
+    public void LoadArchiveFromDb(string archive)
+    {
+        if (archive != null && Session["Archives"]!= null && !((Dictionary<string, bool>)Session["Archives"])[archive])
+        {
+            using (WeatherContext db = new WeatherContext())
+            {
+                ((Dictionary<string, bool>)Session["Archives"])[archive] = true;
+                ((List<Weather>)(Session["weatherFromdb"])).AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
+            }
+        }
+    }
+}
 }
