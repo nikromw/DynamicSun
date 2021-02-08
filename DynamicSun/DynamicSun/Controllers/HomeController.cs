@@ -21,6 +21,7 @@ namespace DynamicSun.Controllers
         {
             if (Session["Archives"] == null && Session["weatherFromdb"] == null)
             {
+                //Переменные сессии
                 Session["Archives"] = new Dictionary<string, bool>();
                 Session["weatherFromdb"] = new List<Weather>();
             }
@@ -142,6 +143,7 @@ namespace DynamicSun.Controllers
                         }
                         catch (Exception e)
                         {
+                            //Некоторая логика обработки ошибки. Условный логер
                             using (FileStream fstream = new FileStream($"Log.txt", FileMode.OpenOrCreate))
                             {
                                 byte[] array = System.Text.Encoding.Default.GetBytes($"Ошибка чтения файла: {path.FileName}, страница : {i} , строка {row}  ") ; 
