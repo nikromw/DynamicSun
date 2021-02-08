@@ -17,51 +17,55 @@ namespace DynamicSun.Controllers
 
     public class HomeController : Controller
     {
-        static List<Weather> weatherFromDb = new List<Weather>();
-        static Dictionary<string, bool> archives = new Dictionary<string, bool>();
-        static int lastFiltrYear = 0;
-        static int lastFiltrMonth = 0;
         public ActionResult Index(string archive)
         {
+            if (Session["Archives"] == null && Session["weatherFromdb"] == null)
+            {
+                Session["Archives"] = new Dictionary<string, bool>();
+                Session["weatherFromdb"] = new List<Weather>(); 
+            }
+            Session["lastFiltrMonth"] = 0;
+            Session["lastFiltrYear"] = 0;
             using (WeatherContext db = new WeatherContext())
             {
                 foreach (var Ar in db.Archives.ToList())
                 {
-                    if (!archives.ContainsKey(Ar.Name))
-                        archives.Add(Ar.Name, false);
+                    if (!((Dictionary<string, bool>)Session["Archives"]).ContainsKey(Ar.Name))
+                    {
+                        ((Dictionary<string, bool>)Session["Archives"]).Add(Ar.Name, false);
+                    }
                 }
             }
             ViewBag.Amount = 10;
             LoadArchiveFromDb(archive);
-            ViewBag.Archives = archives;
             return View();
         }
 
         public ActionResult ViewWeather(int YearFilt = 0, int MonthFiltr = 0, int page = 1)
         {
             int pageSize = 15;
-            var sortList = weatherFromDb;
-            if (YearFilt != 0 && MonthFiltr != 0 || lastFiltrYear != 0 && lastFiltrMonth != 0)
+            List<Weather> sortList = (List<Weather>)Session["weatherFromdb"] == null ? new List<Weather>() : (List<Weather>)Session["weatherFromdb"];
+            if (YearFilt != 0 && MonthFiltr != 0 || (int)Session["lastFiltrYear"] != 0 && (int)Session["lastFiltrMonth"] != 0)
             {
                 if (YearFilt != 0 && MonthFiltr != 0)
                 {
-                    lastFiltrMonth = Convert.ToInt32(MonthFiltr);
-                    lastFiltrYear = Convert.ToInt32(YearFilt);
+                    Session["lastFiltrMonth"] = Convert.ToInt32(MonthFiltr);
+                    Session["lastFiltrYear"] = Convert.ToInt32(YearFilt);
                 }
 
                 sortList = sortList.Where(i => (i.Date.Value.Year == YearFilt && i.Date.Value.Month == MonthFiltr)
-                || (i.Date.Value.Year == lastFiltrYear && i.Date.Value.Month == lastFiltrMonth)).ToList();
+                || (i.Date.Value.Year == (int)Session["lastFiltrYear"] && i.Date.Value.Month == (int)Session["lastFiltrMonth"])).ToList();
             }
-            else if (YearFilt != 0 || lastFiltrYear != 0)
+            else if (YearFilt != 0 || (int)Session["lastFiltrYear"] != 0)
             {
                 if (YearFilt != 0)
                 {
-                    lastFiltrYear = Convert.ToInt32(YearFilt);
+                    Session["lastFiltrYear"] = Convert.ToInt32(YearFilt);
                 }
-                sortList = sortList.Where(i => i.Date.Value.Year == YearFilt || i.Date.Value.Year == lastFiltrYear).ToList();
+                sortList = sortList.Where(i => i.Date.Value.Year == YearFilt || i.Date.Value.Year == (int)Session["lastFiltrYear"]).ToList();
             }
-            ViewBag.YearFiltr = lastFiltrYear;
-            ViewBag.MonthFiltr = lastFiltrMonth;
+            sortList.OrderBy(i => i.Date);
+            ViewBag.FilteredWeather = sortList.OrderBy(i => i.Date);
             IEnumerable<Weather> WeatherPages = sortList.Skip((page - 1) * pageSize).Take(pageSize);
             PageInfo pageInfo = new PageInfo { PageNumber = page, PageSize = pageSize, TotalItems = sortList.Count };
             IndexViewModel ivm = new IndexViewModel { PageInfo = pageInfo, Weathers = WeatherPages };
@@ -76,14 +80,7 @@ namespace DynamicSun.Controllers
             {
                 foreach (var file in fileUpload)
                 {
-                    if (file == null) continue;
-                    string path = AppDomain.CurrentDomain.BaseDirectory + "App_Data\\";
-                    string filename = Path.GetFileName(file.FileName);
-                    if (filename != null)
-                    {
-                        LoadFileInBd(file);
-                    }
-                    ViewBag.Archives = archives;
+                    LoadFileInBd(file);
                 }
             }
             return View();
@@ -95,7 +92,7 @@ namespace DynamicSun.Controllers
             XSSFWorkbook hssfwb;
             try
             {
-               
+
                 hssfwb = new XSSFWorkbook(path.InputStream);
                 var a = hssfwb.NumberOfSheets;
 
@@ -147,18 +144,15 @@ namespace DynamicSun.Controllers
             catch (Exception e)
             { }
         }
-
-        //Выгружаю только те архивы, которые нужны. И запретил повторную выгрузку.
-        //Вся работа с погодой будет только со статическим массивом, без постоянной выгрузки из бд
         public void LoadArchiveFromDb(string archive)
         {
-            if (archive != null && !archives[archive])
+            if (archive != null && !((Dictionary<string, bool>)Session["Archives"])[archive])
             {
                 using (WeatherContext db = new WeatherContext())
                 {
-                    archives[archive] = true;
-                    weatherFromDb.AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
-                    ViewBag.weatherFromdb = weatherFromDb;
+                    ((Dictionary<string, bool>)Session["Archives"])[archive] = true;
+                    //List<Weather> weatherFromDb = (db.Weathers.Where(i => i.ArchiveName == archive).ToList());
+                    ((List<Weather>)(Session["weatherFromdb"])).AddRange(db.Weathers.Where(i => i.ArchiveName == archive).ToList());
                 }
             }
         }

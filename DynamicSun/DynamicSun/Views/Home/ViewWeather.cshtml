@@ -28,15 +28,17 @@
         <td>Горизонтальная видимость</td>
         <td>Природные явления</td>
     </tr>
-    @foreach (var item in Model.Weathers)
+    @if (Session["weatherFromdb"] != null)
     {
-        if ((Convert.ToInt32(item.Date.Value.Year) == ViewBag.YearFiltr&& ViewBag.MonthFiltr == 0)
-            ||( Convert.ToInt32(item.Date.Value.Year) == ViewBag.YearFiltr && (Convert.ToInt32(item.Date.Value.Month) == ViewBag.MonthFiltr)) 
-            || ViewBag.YearFiltr == 0)
+        foreach (var item in Model.Weathers)
         {
+            if ((Convert.ToInt32(item.Date.Value.Year) == Convert.ToInt32(Session["lastFiltrYear"]) && Convert.ToInt32(Session["MonthFiltr"]) == 0)
+                || (Convert.ToInt32(item.Date.Value.Year) == (int)Session["lastFiltrYear"] && (Convert.ToInt32(item.Date.Value.Month) == (int)Session["MonthFiltr"]))
+                || (int)Session["lastFiltrYear"] == 0)
+            {
         <tr>
-            <td>@(item.Date.Value.Day +":"+item.Date.Value.Month +":"+ item.Date.Value.Year)</td>
-            <td>@(item.Date.Value.Hour+":"+item.Date.Value.Minute)</td>
+            <td>@(item.Date.Value.Day + ":" + item.Date.Value.Month + ":" + item.Date.Value.Year)</td>
+            <td>@(item.Date.Value.Hour + ":" + item.Date.Value.Minute)</td>
             <td>@item.Temp</td>
             <td>@item.Wet</td>
             <td>@item.DewPoint</td>
@@ -48,6 +50,7 @@
             <td>@item.HorizontalVisibility</td>
             <td>@item.WeatherEffect</td>
         </tr>
+            }
         }
     }
 </table>

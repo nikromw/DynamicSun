@@ -7,7 +7,7 @@
         <div>
             <table width="100%" border="1">
                 <caption>Loaded archives</caption>
-                @foreach (var archive in ViewBag.Archives)
+                @foreach (var archive in (Dictionary<string, bool>)Session["Archives"])
                 {
                     <tr>
                         <th>@archive.Key"</th>
